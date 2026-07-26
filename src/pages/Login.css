@@ -1,0 +1,200 @@
+/* Login.css */
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Left Section */
+.auth-form-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.brand-logo-login {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.logo-icon-blue {
+  background-color: #00aeef; /* Your platform blue */
+  color: white;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.logo-text-black {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.auth-header h2 {
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.auth-subtitle {
+  color: #888;
+  margin-bottom: 30px;
+}
+
+/* Form Styles */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 16px 24px;
+  background-color: #f4f7f9;
+  border: 1px solid transparent;
+  border-radius: 50px; /* Pill Shape */
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  outline: none;
+  background-color: #fff;
+  border-color: #00aeef;
+}
+
+.login-btn-main {
+  width: 100%;
+  padding: 16px;
+  background-color: #00aeef; /* Main Blue */
+  color: #fff;
+  border: none;
+  border-radius: 50px; /* Pill Shape */
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.3s;
+}
+
+.login-btn-main:hover {
+  background-color: #008cc0;
+}
+
+.auth-extra-links {
+  margin-top: 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.blue-link {
+  color: #00aeef;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.gray-text { color: #888; font-size: 14px; }
+
+/* Right Visual Section */
+.auth-visual-panel {
+  flex: 1.2;
+  margin: 15px;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+  background-color: #f0f0f0;
+}
+
+.panel-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Glassmorphism Cards */
+.floating-card {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  animation: floatAnim 5s ease-in-out infinite;
+}
+
+@keyframes floatAnim {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.summary-card-top {
+  top: 10%;
+  left: 10%;
+  width: 320px;
+}
+
+.interview-card-bottom {
+  bottom: 15%;
+  left: 20%;
+  width: 340px;
+  animation-delay: 2s;
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.green-txt strong { color: #28a745; }
+.red-txt strong { color: #dc3545; }
+
+.mini-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.interviewee-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .auth-visual-panel { display: none; }
+}

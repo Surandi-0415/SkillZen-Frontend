@@ -1,0 +1,217 @@
+/* Base Layout */
+.platform-page {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+}
+
+.pre-interview-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  flex-grow: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Stepper Navigation (Shared consistency) */
+.stepper-nav { margin-bottom: 40px; display: flex; justify-content: flex-end; }
+.stepper-list { display: flex; align-items: center; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.stepper-item { display: flex; align-items: center; font-size: 14px; font-weight: 500; }
+.stepper-item.completed .stepper-text { color: #2563eb; }
+.stepper-item.current .stepper-text { background-color: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
+.stepper-item.pending .stepper-text { color: #64748b; padding: 6px 0; }
+.stepper-separator { color: #cbd5e1; display: flex; align-items: center; }
+
+/* Grid Layout */
+.pre-interview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 850px) {
+  .pre-interview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Common Card Styles */
+.hardware-card, .instructions-card {
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.card-title {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 0 0 24px 0;
+  font-size: 15px;
+  color: #64748b;
+}
+
+/* Camera Preview Box */
+.video-preview-box {
+  background: #0f172a;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.preview-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mirrored-video {
+  transform: scaleX(-1);
+}
+
+.hardware-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px;
+}
+
+.mic-test-indicator {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pulsing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Instructions List */
+.guidelines-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.guidelines-list li {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blue-bg { background-color: #eff6ff; color: #2563eb; }
+.purple-bg { background-color: #faf5ff; color: #9333ea; }
+.green-bg { background-color: #f0fdfa; color: #0d9488; }
+
+.guidelines-list strong {
+  display: block;
+  font-size: 15px;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.guidelines-list p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Action Area */
+.action-area {
+  margin-top: auto;
+  text-align: right;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+}
+
+.btn-join-interview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-join-interview:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+}
+
+.btn-join-interview:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 13px;
+  margin: 12px 0 0 0;
+  text-align: center;
+  font-weight: 500;
+}

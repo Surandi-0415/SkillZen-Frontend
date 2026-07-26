@@ -1,0 +1,296 @@
+/* History Page Container */
+.history-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  flex-grow: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.history-header {
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.history-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.history-header p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+/* Loading & Empty States */
+.loading-box, .empty-box {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 60px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.empty-box h2 {
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+/* The Grid Layout */
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Individual Card Styling */
+.history-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.history-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #bfdbfe;
+}
+
+/* Card Header */
+.history-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.history-top h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.history-top p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Score Badge */
+.score-badge {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #2563eb;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  border: 1px solid #bfdbfe;
+}
+
+/* Card Body Info */
+.history-body {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.history-item span {
+  color: #64748b;
+}
+
+.history-item strong {
+  color: #334155;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  width: 100%;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.history-footer {
+  margin-top: auto;
+}
+/* src/styles/History.css - Add these new styles */
+
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.total-count {
+  font-size: 14px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.session-date {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 4px 0;
+}
+
+.status-badge {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.history-recommendations {
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  margin: 12px 0;
+  border-left: 3px solid #10b981;
+}
+
+.history-recommendations .rec-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #065f46;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.history-recommendations p {
+  margin: 0;
+  font-size: 13px;
+  color: #065f46;
+}
+
+.history-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.history-footer .btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.history-footer .btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.status-text {
+  text-transform: capitalize;
+}
+
+.status-text.completed {
+  color: #10b981;
+}
+
+.status-text.pending {
+  color: #f59e0b;
+}
+
+.status-text.processing {
+  color: #3b82f6;
+}
+
+.status-text.failed {
+  color: #ef4444;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 20px 0;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty Box Enhancement */
+.empty-box {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-box h2 {
+  font-size: 24px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.empty-box p {
+  color: #64748b;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* Error Box */
+.error-box {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.error-box h2 {
+  font-size: 24px;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.error-box p {
+  color: #64748b;
+  margin-bottom: 20px;
+}
