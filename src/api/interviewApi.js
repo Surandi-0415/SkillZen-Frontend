@@ -63,6 +63,16 @@ export const generateQuestions = (jd, duration = 30) => {
 };
 
 // ============================================================
+// MEET & GREET (WARM-UP) QUESTIONS  (Node.js backend / MongoDB)
+// ============================================================
+// Fetches a few pre-built warm-up questions instantly so the candidate can
+// start the interview without waiting for the (slow) AI question generation.
+
+export const getMeetGreetQuestions = (count = 3) => {
+  return nodeClient.get(`/interviews/meet-greet?count=${count}`);
+};
+
+// ============================================================
 // Node.js Backend (Database)
 // ============================================================
 

@@ -8,32 +8,45 @@ function Generating() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Destructure state passed from Setup
-  const { questions = [], duration = 30, jobDescription = "" } = location.state || {};
+  // Destructure state passed from Setup.
+  // The AI questions are being generated in the BACKGROUND (see
+  // services/questionGeneration.js); here we only carry the instant warm-up
+  // questions forward. This page is now just a short, friendly transition.
+  const {
+    meetGreetQuestions = [],
+    duration = 30,
+    jobDescription = ""
+  } = location.state || {};
+
+  // Rough estimate of how many tailored questions the AI will produce, purely
+  // for display (matches the backend duration -> count mapping).
+  const estimatedAiCount = duration === 15 ? 5 : duration === 20 ? 7 : 10;
 
   const [progress, setProgress] = useState(0);
 
-  // Simulate progress loading
+
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          // 👇 Changed this to route to Pre-Interview instead of Interview!
-          navigate("/pre-interview", { state: { questions, duration, jobDescription } });
+
+          navigate("/pre-interview", {
+            state: { meetGreetQuestions, duration, jobDescription }
+          });
           return 100;
         }
-        // Adjust speed slightly to make the animation feel natural
+
         return prev + 5;
       });
-    }, 150); // 150ms * 20 steps = ~3 seconds of loading
-    
+    }, 90); // ~1.8s: just a smooth hand-off, not a real wait anymore
+
     return () => clearInterval(interval);
-  }, [navigate, questions, duration, jobDescription]);
+  }, [navigate, meetGreetQuestions, duration, jobDescription]);
 
   // Dynamic loading text based on progress
-  let loadingText = "Analyzing job requirements...";
-  if (progress > 35) loadingText = `Formulating ${questions.length || 5} tailored questions...`;
+  let loadingText = "Setting up your warm-up questions...";
+  if (progress > 35) loadingText = "Your tailored questions are being prepared in the background...";
   if (progress > 75) loadingText = "Configuring interview environment...";
 
   return (
@@ -102,7 +115,7 @@ function Generating() {
               </div>
               <div className="badge badge-purple">
                 <span className="dot dot-purple"></span>
-                {questions.length || 5} Questions
+                ~{estimatedAiCount + meetGreetQuestions.length} Questions
               </div>
             </div>
 

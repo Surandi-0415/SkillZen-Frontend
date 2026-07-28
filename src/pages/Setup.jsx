@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { getMeetGreetQuestions } from "../api/interviewApi";
+import {
+  startQuestionGeneration,
+  resetQuestionGeneration
+} from "../services/questionGeneration";
 import "./Setup.css";
 
-const PYTHON_API = import.meta.env.VITE_PYTHON_API_URL;
+// Number of warm-up (meet & greet) questions to show instantly at the start.
+const WARMUP_COUNT = 3;
 
 function Setup() {
   const navigate = useNavigate();
@@ -23,17 +28,36 @@ function Setup() {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("jd", jd);
-      formData.append("duration", duration);
+      // 1) Kick off the slow AI question generation IN THE BACKGROUND.
+      //    We do NOT await it here — the candidate should not wait behind it.
+      resetQuestionGeneration();
+      startQuestionGeneration(jd, duration);
 
-      const response = await axios.post(`${PYTHON_API}/generate-questions`, formData);
-      const questions = response.data.questions;
+      // 2) Fetch a few instant warm-up questions from MongoDB (fast).
+      //    If this fails for any reason, fall back to a built-in set so the
+      //    interview can still begin immediately.
+      let meetGreetQuestions = [];
+      try {
+        const res = await getMeetGreetQuestions(WARMUP_COUNT);
+        meetGreetQuestions = res?.data?.questions || [];
+      } catch (err) {
+        console.warn("Meet & greet fetch failed, using fallback warm-ups.", err);
+      }
+      if (!meetGreetQuestions.length) {
+        meetGreetQuestions = [
+          "To get us started, please give a brief introduction about yourself.",
+          "What made you interested in this position?",
+          "Tell me about something you are proud of."
+        ].slice(0, WARMUP_COUNT);
+      }
 
-      navigate("/generating", { state: { questions, duration, jobDescription: jd } });
+      // 3) Proceed instantly — AI questions keep generating in the background.
+      navigate("/generating", {
+        state: { meetGreetQuestions, duration, jobDescription: jd }
+      });
     } catch (error) {
-      console.error("Failed to generate questions", error);
-      alert("Error generating questions. Please try again.");
+      console.error("Failed to start interview", error);
+      alert("Error starting the interview. Please try again.");
     } finally {
       setLoading(false);
     }

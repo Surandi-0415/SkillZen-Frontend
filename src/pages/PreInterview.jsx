@@ -8,8 +8,17 @@ function PreInterview() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Grab data from location state with defaults
-  const { questions = [], duration = 30, jobDescription = "" } = location.state || {};
+  // Grab data from location state with defaults.
+  // Only the instant warm-up questions are known here; the AI-tailored ones are
+  // still being generated in the background and are picked up on the Interview page.
+  const {
+    meetGreetQuestions = [],
+    duration = 30,
+    jobDescription = ""
+  } = location.state || {};
+
+  const estimatedAiCount = duration === 15 ? 5 : duration === 20 ? 7 : 10;
+  const estimatedTotal = estimatedAiCount + meetGreetQuestions.length;
 
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
@@ -48,7 +57,9 @@ function PreInterview() {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
-    navigate("/interview", { state: { questions, duration, jobDescription } });
+    navigate("/interview", {
+      state: { meetGreetQuestions, duration, jobDescription }
+    });
   };
 
   return (
@@ -138,7 +149,10 @@ function PreInterview() {
                   </div>
                   <div>
                     <strong>{duration} Minute Session</strong>
-                    <p>Briefly answer {questions.length} questions tailored to your role.</p>
+                    <p>
+                      You'll start with a few quick warm-up questions, then answer
+                      ~{estimatedTotal} questions tailored to your role.
+                    </p>
                   </div>
                 </li>
                 <li>
