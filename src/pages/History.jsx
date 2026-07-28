@@ -25,9 +25,7 @@ function History() {
     fetchHistory();
   }, []);
 
-  // ============================================================
-  // ✅ FETCH HISTORY - Handles API response correctly
-  // ============================================================
+
 
   const fetchHistory = async (page = 1) => {
     try {
@@ -67,9 +65,7 @@ function History() {
     }
   };
 
-  // ============================================================
-  // ✅ VIEW REPORT - Navigate with session data
-  // ============================================================
+
 
   const viewReport = (session) => {
     // Navigate to results with session data
@@ -82,9 +78,6 @@ function History() {
     });
   };
 
-  // ============================================================
-  // ✅ FORMAT DATE - Helper function
-  // ============================================================
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -112,7 +105,7 @@ function History() {
           </div>
         ) : error ? (
           <div className="error-box">
-            <p>❌ {error}</p>
+            <p> {error}</p>
             <button
               className="btn-primary"
               onClick={() => fetchHistory()}
@@ -183,7 +176,7 @@ function History() {
               ))}
             </div>
 
-            {/* ✅ Pagination (if more than 1 page) */}
+            {/*  Pagination (if more than 1 page) */}
             {pagination.pages > 1 && (
               <div className="pagination">
                 <button

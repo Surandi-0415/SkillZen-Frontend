@@ -13,17 +13,17 @@ function Generating() {
 
   const [progress, setProgress] = useState(0);
 
-  // Simulate progress loading
+
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          // 👇 Changed this to route to Pre-Interview instead of Interview!
+          
           navigate("/pre-interview", { state: { questions, duration, jobDescription } });
           return 100;
         }
-        // Adjust speed slightly to make the animation feel natural
+       
         return prev + 5;
       });
     }, 150); // 150ms * 20 steps = ~3 seconds of loading

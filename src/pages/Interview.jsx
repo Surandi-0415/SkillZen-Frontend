@@ -211,14 +211,14 @@ function Interview() {
 
       const jdText = String(jobDescription || "dummy_jd");
 
-      console.log("📤 Sending feedback request:", {
+      console.log("Sending feedback request:", {
         jd: jdText,
         qa_list: formattedAnswers
       });
 
       const response = await generateFeedback(jdText, formattedAnswers);
 
-      console.log("📥 Feedback response:", response.data);
+      console.log("Feedback response:", response.data);
 
       let report = "Feedback report generated successfully.";
       
@@ -246,7 +246,7 @@ function Interview() {
       });
 
     } catch (error) {
-      console.error("❌ Feedback generation failed:", error);
+      console.error(" Feedback generation failed:", error);
       console.error("Error details:", error.response?.data);
       
       let errorMessage = "Error generating feedback. Please try again.";
