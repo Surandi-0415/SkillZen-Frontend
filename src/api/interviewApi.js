@@ -32,12 +32,19 @@ export const analyzeAnswer = (jd, question, videoFile) => {
 export const generateFeedback = (jd, qaList) => {
   console.log("📤 Sending feedback request:", { jd, qaList });
 
+  // Forward the full per-answer analysis (content + facial + speech) so the
+  // Python backend can build the four-section feedback report. The facial and
+  // speech objects were previously dropped here, leaving those sections empty.
   const formattedQaList = qaList.map(item => ({
     question: String(item.question || ""),
     answer: String(item.answer || item.transcript || ""),
     content_score: Number(item.content_score || 5.0),
     confidence: String(item.confidence || "Moderate"),
-    explanation: String(item.explanation || "No explanation provided")
+    explanation: String(item.explanation || "No explanation provided"),
+    facial_analysis: item.facial_analysis || {},
+    speech_analysis: item.speech_analysis || {},
+    combined_confidence: Number(item.combined_confidence || 0),
+    overall_emotion: String(item.overall_emotion || "unknown")
   }));
 
   return pythonClient.post('/generate-feedback', {
