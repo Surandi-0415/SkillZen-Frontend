@@ -29,7 +29,7 @@ export const analyzeAnswer = (jd, question, videoFile) => {
 // GENERATE FEEDBACK
 // ============================================================
 
-export const generateFeedback = (jd, qaList) => {
+export const generateFeedback = (jd, qaList, meta = {}) => {
   console.log("📤 Sending feedback request:", { jd, qaList });
 
   // Forward the full per-answer analysis (content + facial + speech) so the
@@ -49,7 +49,12 @@ export const generateFeedback = (jd, qaList) => {
 
   return pythonClient.post('/generate-feedback', {
     jd: String(jd || ""),
-    qa_list: formattedQaList
+    qa_list: formattedQaList,
+    // Header details for the report. Position/company are inferred from the
+    // job description by the backend when not supplied here.
+    candidate: String(meta.candidate || ""),
+    position: String(meta.position || ""),
+    company: String(meta.company || "")
   });
 };
 

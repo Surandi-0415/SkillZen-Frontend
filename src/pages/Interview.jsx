@@ -376,9 +376,23 @@ function Interview() {
 
       const jdText = String(jobDescription || "dummy_jd");
 
+      // Resolve the candidate name from the stored user (supports both
+      // { name } and nested { user: { name } } shapes). Position and company
+      // are left to the backend to infer from the job description.
+      let candidateName = "";
+      try {
+        const parsed = JSON.parse(localStorage.getItem("user") || "{}");
+        const userObj = parsed.user || parsed;
+        candidateName = userObj.name || "";
+      } catch (e) {
+        candidateName = "";
+      }
+
       let report = "Feedback report generated successfully.";
       if (formattedAnswers.length > 0) {
-        const response = await generateFeedback(jdText, formattedAnswers);
+        const response = await generateFeedback(jdText, formattedAnswers, {
+          candidate: candidateName
+        });
         if (response.data) {
           if (typeof response.data === "string") report = response.data;
           else if (response.data.report) report = response.data.report;
