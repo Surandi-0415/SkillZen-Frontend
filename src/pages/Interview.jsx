@@ -41,6 +41,42 @@ const FALLBACK_AI_QUESTIONS = [
   "Where do you see the biggest opportunity to add value in this role?"
 ];
 
+const extractJobTitle = (jdText) => {
+  if (!jdText) return "Software Engineer";
+  const cleanJd = jdText.trim();
+  
+  // 1. Try to find "Job Title: ..." or "Position: ..."
+  const titleRegex = /(?:job\s+title|position|role)\s*:\s*([^\n\r.]+)/i;
+  const match = cleanJd.match(titleRegex);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  // 2. Try to find "looking for a/an ...", "seeking a/an ...", "hiring a/an ..."
+  const lookingRegex = /(?:looking\s+for|seeking|hiring|recruit)\s+(?:a|an)?\s*([A-Z][a-zA-Z\s-+]*?(?:Developer|Engineer|Architect|Manager|Analyst|Consultant|Specialist|Lead|Director|Designer|Intern))/i;
+  const matchLooking = cleanJd.match(lookingRegex);
+  if (matchLooking && matchLooking[1]) {
+    return matchLooking[1].trim();
+  }
+  
+  // 3. Try to extract the first line if it's short
+  const firstLine = cleanJd.split('\n')[0].trim();
+  if (firstLine.length > 5 && firstLine.length < 50) {
+    return firstLine;
+  }
+  
+  // 4. Default fallback: check keywords
+  const lowerJd = cleanJd.toLowerCase();
+  if (lowerJd.includes("react")) return "React Developer";
+  if (lowerJd.includes("frontend")) return "Frontend Engineer";
+  if (lowerJd.includes("backend")) return "Backend Engineer";
+  if (lowerJd.includes("python")) return "Python Developer";
+  if (lowerJd.includes("full stack") || lowerJd.includes("fullstack")) return "Full Stack Engineer";
+  if (lowerJd.includes("data scientist")) return "Data Scientist";
+  
+  return "Candidate Target Role";
+};
+
 function Interview() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -494,8 +530,8 @@ function Interview() {
 
   const currentQuestion = allQuestions[questionIndex] || "";
   const counterLabel = aiQuestions
-    ? `Question ${questionIndex + 1} / ${allQuestions.length}`
-    : `Warm-up ${questionIndex + 1} / ${warmupCount}`;
+    ? `Question ${questionIndex + 1} of ${allQuestions.length}`
+    : `Question ${questionIndex + 1}`;
 
   return (
     <div className="platform-page">
@@ -503,36 +539,43 @@ function Interview() {
 
       <main className="interview-container">
         <div className="interview-workspace">
-          <section className="camera-section">
-            <div className="session-header">
-              <div>
-                {counterLabel}
-                <span className={`phase-chip ${isWarmup ? "warmup" : "main"}`}>
-                  {isWarmup ? "Warm-up" : "Interview"}
-                </span>
+          
+          {/* Main workspace section */}
+          <div className="workspace-main">
+            {/* Active Question on top */}
+            <div className="active-question-card">
+              <div className="card-header">
+                <span className="question-badge">{counterLabel.toUpperCase()}</span>
+                {isRecording && <span className="recording-status-text">🔴 Recording Answer</span>}
               </div>
-              {analyzingCount > 0 && (
-                <div className="bg-analyzing">
-                  🔄 {analyzingCount} answer{analyzingCount > 1 ? "s" : ""}{" "}
-                  analyzing in background
-                </div>
-              )}
+              <h2 className="question-text">{currentQuestion}</h2>
             </div>
 
-            <div className="camera-box">
-              {cameraError ? (
-                <div className="camera-error">
-                  <span>📷</span>
-                  <p>Camera access denied. Please allow camera access and refresh.</p>
-                </div>
-              ) : (
-                <video
-                  ref={videoPreviewRef}
-                  autoPlay
-                  muted
-                  className="video-preview mirrored-video"
-                />
-              )}
+            {/* Camera Box */}
+            <div className={`camera-container-box ${isRecording ? "is-recording" : ""}`}>
+              <div className="camera-box">
+                {cameraError ? (
+                  <div className="camera-error">
+                    <span>📷</span>
+                    <p>Camera access denied. Please allow camera access and refresh.</p>
+                  </div>
+                ) : (
+                  <>
+                    <video
+                      ref={videoPreviewRef}
+                      autoPlay
+                      muted
+                      className="video-preview mirrored-video"
+                    />
+                    {isRecording && (
+                      <div className="rec-overlay">
+                        <span className="rec-pulse-dot"></span>
+                        <span>LIVE EVALUATION</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             {aiError && (
@@ -549,6 +592,7 @@ function Interview() {
               </div>
             )}
 
+            {/* Controls */}
             <div className="controls-bar">
               <button
                 className="btn-secondary"
@@ -572,38 +616,96 @@ function Interview() {
                 </button>
               )}
             </div>
-          </section>
+          </div>
 
-          <section className="question-section">
-            <div className="active-question-card">
-              <h4>{isWarmup ? "Warm-up Question" : "Current Question"}</h4>
-              <h2>{currentQuestion}</h2>
+          {/* Interactive Workspace Sidebar */}
+          <aside className="workspace-sidebar">
+            {/* Session Info widget */}
+            <div className="sidebar-widget session-info-widget">
+              <h4>Interview Session</h4>
+              <div className="session-detail-item">
+                <span className="label">Target Job</span>
+                <span className="value">{extractJobTitle(jobDescription)}</span>
+              </div>
+              <div className="session-detail-item">
+                <span className="label">Total Questions</span>
+                <span className="value">{allQuestions.length} Questions</span>
+              </div>
+              {analyzingCount > 0 && (
+                <div className="sidebar-analyzing-alert">
+                  <div className="spinner-small"></div>
+                  <span>{analyzingCount} Answer{analyzingCount > 1 ? "s" : ""} processing...</span>
+                </div>
+              )}
             </div>
 
-            {answerMeta.length > 0 && (
-              <div className="answers-preview">
-                <h4>Submitted Answers ({answerMeta.length})</h4>
-                <div className="preview-list">
-                  {answerMeta.map((a) => (
-                    <div key={a.index} className="preview-item">
-                      <span className="q-number">Q{a.index + 1}</span>
-                      {a.status === "analyzing" && (
-                        <span className="q-score analyzing">Analyzing…</span>
-                      )}
-                      {a.status === "done" && (
-                        <span className="q-score">
-                          Score: {Number(a.score ?? 0).toFixed(1)}/10
-                        </span>
-                      )}
-                      {a.status === "error" && (
-                        <span className="q-score error">Failed</span>
-                      )}
+            {/* Progress Timeline Progress Tracker */}
+            <div className="sidebar-widget progress-timeline-widget">
+              <h4>Timeline Progress</h4>
+              <div className="timeline-list">
+                {allQuestions.map((q, idx) => {
+                  const isCurrent = idx === questionIndex;
+                  const isCompleted = idx < questionIndex;
+                  const meta = answerMeta.find(m => m.index === idx);
+                  
+                  let statusClass = "pending";
+                  let icon = <span className="timeline-dot"></span>;
+                  
+                  if (isCurrent) {
+                    statusClass = "current";
+                    icon = <span className="timeline-dot-active"></span>;
+                  } else if (isCompleted) {
+                    if (meta && meta.status === "analyzing") {
+                      statusClass = "analyzing";
+                      icon = <div className="timeline-spinner"></div>;
+                    } else if (meta && meta.status === "done") {
+                      statusClass = "completed";
+                      icon = (
+                        <svg className="timeline-check" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      );
+                    } else if (meta && meta.status === "error") {
+                      statusClass = "skipped";
+                      icon = <span className="timeline-skip-dot">x</span>;
+                    } else {
+                      statusClass = "skipped";
+                      icon = <span className="timeline-skip-dot">-</span>;
+                    }
+                  }
+                  
+                  return (
+                    <div key={idx} className={`timeline-item ${statusClass}`}>
+                      <div className="timeline-icon-wrapper">
+                        {icon}
+                      </div>
+                      <div className="timeline-content">
+                        <span className="timeline-title">Question {idx + 1}</span>
+                        {meta && meta.status === "done" && (
+                          <span className="timeline-score">Grade: {Number(meta.score || 0).toFixed(1)}/10</span>
+                        )}
+                        {meta && meta.status === "analyzing" && (
+                          <span className="timeline-score-loading">Analyzing...</span>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            )}
-          </section>
+            </div>
+
+            {/* Quick Tips */}
+            <div className="sidebar-widget tips-widget">
+              <h4>Guidelines</h4>
+              <ul>
+                <li>Maintain direct eye contact with the camera.</li>
+                <li>Speak clearly at a steady, conversational pace.</li>
+                <li>Structure answers using the STAR method.</li>
+                <li>Minimize background noise and distractions.</li>
+              </ul>
+            </div>
+          </aside>
+
         </div>
       </main>
 

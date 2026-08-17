@@ -142,7 +142,7 @@ function Register() {
               <label>Full Name</label>
               <input 
                 type="text" 
-                placeholder="John Doe" 
+                placeholder="" 
                 value={formData.name}
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 onBlur={() => handleBlur("name")}
@@ -159,7 +159,7 @@ function Register() {
               <label>Email Address</label>
               <input 
                 type="email" 
-                placeholder="you@example.com" 
+                placeholder="" 
                 value={formData.email}
                 onChange={(e) => handleFieldChange("email", e.target.value)}
                 onBlur={() => handleBlur("email")}
@@ -177,7 +177,7 @@ function Register() {
               <div className="password-input-wrapper">
                 <input 
                   type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
+                  placeholder="" 
                   value={formData.password}
                   onChange={(e) => handleFieldChange("password", e.target.value)}
                   onBlur={() => handleBlur("password")}

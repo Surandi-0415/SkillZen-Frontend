@@ -12,31 +12,7 @@ function Practice() {
       
       <main className="practice-container">
         {/* Modern Stepper Navigation */}
-        <nav className="stepper-nav" aria-label="Progress">
-          <ol className="stepper-list">
-            <li className="stepper-item current" aria-current="step">
-              <span className="stepper-text">1. Overview</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            <li className="stepper-item pending">
-              <span className="stepper-text">2. Setup Role</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            <li className="stepper-item pending">
-              <span className="stepper-text">3. Interview</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            <li className="stepper-item pending">
-              <span className="stepper-text">4. Results</span>
-            </li>
-          </ol>
-        </nav>
+        
 
         {/* Hero Section */}
         <section className="hero-section">
@@ -51,7 +27,7 @@ function Practice() {
           </h1>
           
           <p className="hero-description">
-            MockHire simulates professional interview environments, analyzing your technical responses and delivery to provide actionable, data-driven feedback tailored to your target role.
+            SkillZen simulates professional interview environments, analyzing your technical responses and delivery to provide actionable, data-driven feedback tailored to your target role.
           </p>
           
           <button className="btn-hero-primary" onClick={() => navigate("/setup")}>

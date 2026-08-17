@@ -223,7 +223,8 @@ function Results() {
 
     return (
       <div className="analysis-section combined-analysis">
-        <h4>📊 Combined Analysis</h4>
+        <h4>📊 Combined Facial and Speech Analysis
+</h4>
         <div className="combined-metrics">
           <div className="combined-metric">
             <span className="label">Combined Confidence</span>
@@ -290,7 +291,7 @@ function Results() {
               {interviewData?.jobTitle || "Interview Performance Report"}
             </h1>
             <p className="report-subtitle">
-              {totalQuestions} questions answered • AI Evaluated
+              {totalQuestions} questions answered 
               {interviewData?.createdAt && ` • ${new Date(interviewData.createdAt).toLocaleDateString()}`}
             </p>
           </div>
@@ -343,7 +344,7 @@ function Results() {
 
         {/* AI REPORT */}
         <section className="summary-section">
-          <h2 className="section-title">AI Executive Summary</h2>
+          <h2 className="section-title">Interview Performance Summary</h2>
           <div className="summary-box">
             {report ? (
               <div className="markdown-report">

@@ -185,7 +185,6 @@ code {
 .btn-hero-primary,
 .btn-join-interview,
 .btn-primary-large,
-.btn-record-start,
 .btn-upload {
   background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
   border: none !important;
@@ -200,7 +199,6 @@ code {
 .btn-hero-primary:hover,
 .btn-join-interview:hover,
 .btn-primary-large:hover:not(:disabled),
-.btn-record-start:hover:not(:disabled),
 .btn-upload:hover {
   background-position: right center !important;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
@@ -210,7 +208,29 @@ code {
 .btn-primary:disabled,
 .auth-btn-primary:disabled,
 .btn-join-interview:disabled,
-.btn-primary-large:disabled,
+.btn-primary-large:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Global Start Answering record button (Green gradient) */
+.btn-record-start {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: none !important;
+  color: white !important;
+  background-size: 200% auto !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-record-start:hover:not(:disabled) {
+  background-position: right center !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
 .btn-record-start:disabled {
   opacity: 0.6 !important;
   cursor: not-allowed !important;

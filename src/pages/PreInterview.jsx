@@ -67,30 +67,8 @@ function PreInterview() {
       <Header />
       
       <main className="pre-interview-container">
-        {/* Stepper Navigation */}
-        <nav className="stepper-nav">
-          <ol className="stepper-list">
-            <li className="stepper-item completed"><span className="stepper-text">1. Setup Role</span></li>
-            <li className="stepper-separator">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M9 5l7 7-7 7"></path>
-                </svg>
-            </li>
-            <li className="stepper-item current"><span className="stepper-text">2. Equipment Check</span></li>
-            <li className="stepper-separator">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M9 5l7 7-7 7"></path>
-                </svg>
-            </li>
-            <li className="stepper-item pending"><span className="stepper-text">3. Interview</span></li>
-            <li className="stepper-separator">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M9 5l7 7-7 7"></path>
-                </svg>
-            </li>
-            <li className="stepper-item pending"><span className="stepper-text">4. Results</span></li>
-          </ol>
-        </nav>
+     
+          
 
         <div className="pre-interview-grid">
           

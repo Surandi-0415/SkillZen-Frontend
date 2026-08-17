@@ -172,15 +172,7 @@ function Profile() {
             {/* AVATAR */}
             <div className="avatar-section">
               <div className="avatar-display">
-                <img 
-                  src="/default_avatar.png" 
-                  alt="Avatar" 
-                  className="avatar-img" 
-                  onError={(e) => { e.target.style.display = 'none'; }} 
-                />
-                <span className="avatar-fallback">
-                  {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
-                </span>
+                {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
               </div>
 
               <h3 className="avatar-name">{userData.name || "User"}</h3>

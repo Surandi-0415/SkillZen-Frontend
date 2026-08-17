@@ -55,32 +55,7 @@ function Generating() {
       
       <main className="generating-container">
         {/* Modern Stepper Navigation */}
-        <nav className="stepper-nav" aria-label="Progress">
-          <ol className="stepper-list">
-            <li className="stepper-item completed">
-              <span className="stepper-text">1. Overview</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            <li className="stepper-item completed">
-              <span className="stepper-text">2. Setup Role</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            {/* Updated Stepper to show Equipment Check next */}
-            <li className="stepper-item current" aria-current="step">
-              <span className="stepper-text">3. Equipment Check</span>
-            </li>
-            <li className="stepper-separator">
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
-            </li>
-            <li className="stepper-item pending">
-              <span className="stepper-text">4. Interview</span>
-            </li>
-          </ol>
-        </nav>
+        
 
         {/* Loading UI Centerpiece */}
         <section className="loader-section">

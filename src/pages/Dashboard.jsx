@@ -200,21 +200,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="sz-vibrant-card metric-purple">
-            <div className="sz-card-glow"></div>
-            <div className="sz-vibrant-card-inner">
-              <span className="sz-card-label">CONFIDENCE DISTRIBUTION</span>
-              <div className="sz-card-main">
-                <span className="sz-card-value accent-text">
-                  {Object.entries(stats.confidenceLevels).reduce((max, [level, count]) => 
-                    count > max.count ? {level, count} : max, 
-                    {level: 'None', count: 0}
-                  ).level}
-                </span>
-                <span className="sz-card-badge status-engine">Most Common</span>
-              </div>
-            </div>
-          </div>
+  
         </section>
 
         {/* WORKSPACE OPERATIONS GRID */}
