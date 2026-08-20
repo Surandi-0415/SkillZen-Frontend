@@ -41,22 +41,60 @@ function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  const getSessionFacialScore = (session) => {
+    const answers = session.answers || [];
+    const answersWithFacial = answers.filter(a => 
+      a.facial_analysis && 
+      (typeof a.facial_analysis.confidence === 'number' || typeof a.facial_analysis.confidence_score === 'number') &&
+      a.facial_analysis.frames_analyzed > 0
+    );
+    if (answersWithFacial.length === 0) return null;
+    const total = answersWithFacial.reduce((sum, a) => {
+      const conf = (a.facial_analysis.confidence !== undefined && a.facial_analysis.confidence > 0) ? a.facial_analysis.confidence : (a.facial_analysis.confidence_score || 0);
+      return sum + conf;
+    }, 0);
+    return (total / answersWithFacial.length) * 100;
+  };
+
+  const getSessionSpeechScore = (session) => {
+    const answers = session.answers || [];
+    const answersWithSpeech = answers.filter(a => 
+      a.speech_analysis && 
+      typeof a.speech_analysis.confidence_score === 'number' &&
+      a.speech_analysis.predicted_emotion !== 'unknown' &&
+      a.speech_analysis.confidence_score > 0
+    );
+    if (answersWithSpeech.length === 0) return null;
+    const total = answersWithSpeech.reduce((sum, a) => sum + a.speech_analysis.confidence_score, 0);
+    return (total / answersWithSpeech.length) * 100;
+  };
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Fetch analytics and history in parallel
+      // Fetch analytics and all history in parallel
       const [analyticsRes, historyRes] = await Promise.all([
         getInterviewAnalytics(),
-        getInterviewHistory(1, 3) // Get 3 most recent
+        getInterviewHistory(1, 1000)
       ]);
       
       const analyticsData = analyticsRes.data || {};
       const historyData = historyRes.data?.data || [];
       
       setAnalytics(analyticsData);
-      setRecentInterviews(historyData);
+      setRecentInterviews(historyData.slice(0, 3)); // Display 3 most recent sessions in list
       
+      const completed = historyData.filter(s => s.status === "completed");
+
+      // Average Facial Score
+      const facialScores = completed.map(getSessionFacialScore).filter(s => s !== null);
+      const avgFacial = facialScores.length > 0 ? (facialScores.reduce((sum, s) => sum + s, 0) / facialScores.length).toFixed(1) : null;
+
+      // Average Speech Score
+      const speechScores = completed.map(getSessionSpeechScore).filter(s => s !== null);
+      const avgSpeech = speechScores.length > 0 ? (speechScores.reduce((sum, s) => sum + s, 0) / speechScores.length).toFixed(1) : null;
+
       // Extract stats from analytics
       setStats({
         totalInterviews: analyticsData.totalInterviews || 0,
@@ -64,6 +102,8 @@ function Dashboard() {
         bestScore: historyData.length > 0 
           ? Math.max(...historyData.map(i => i.overallScore || 0))
           : 0,
+        avgFacialConfidence: avgFacial,
+        avgSpeechConfidence: avgSpeech,
         confidenceLevels: analyticsData.confidenceLevels || {
           Excellent: 0,
           High: 0,
@@ -157,6 +197,7 @@ function Dashboard() {
 
         {/* GLOWING METRIC CARDS */}
         <section className="sz-vibrant-metrics">
+          
           <div className="sz-vibrant-card metric-blue">
             <div className="sz-card-glow"></div>
             <div className="sz-vibrant-card-inner">
@@ -180,7 +221,7 @@ function Dashboard() {
                   <span className="sz-card-unit">/10</span>
                 </span>
                 <span className={`sz-card-badge ${stats.averageScore >= 7 ? 'status-up' : 'status-stable'}`}>
-                  {stats.averageScore >= 7 ? '↑ Good' : 'Needs Practice'}
+                  {stats.averageScore >= 7 ? '↑ Good' : 'Needs Work'}
                 </span>
               </div>
             </div>
@@ -200,7 +241,32 @@ function Dashboard() {
             </div>
           </div>
 
-  
+          <div className="sz-vibrant-card metric-purple">
+            <div className="sz-card-glow"></div>
+            <div className="sz-vibrant-card-inner">
+              <span className="sz-card-label">FACIAL CONFIDENCE</span>
+              <div className="sz-card-main">
+                <span className="sz-card-value">
+                  {stats.avgFacialConfidence ? `${stats.avgFacialConfidence}%` : 'N/A'}
+                </span>
+                <span className="sz-card-badge status-stable">Expression</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="sz-vibrant-card metric-amber">
+            <div className="sz-card-glow"></div>
+            <div className="sz-vibrant-card-inner">
+              <span className="sz-card-label">SPEECH CONFIDENCE</span>
+              <div className="sz-card-main">
+                <span className="sz-card-value">
+                  {stats.avgSpeechConfidence ? `${stats.avgSpeechConfidence}%` : 'N/A'}
+                </span>
+                <span className="sz-card-badge status-stable">Voice Tone</span>
+              </div>
+            </div>
+          </div>
+
         </section>
 
         {/* WORKSPACE OPERATIONS GRID */}
@@ -228,7 +294,7 @@ function Dashboard() {
                   <article 
                     key={interview._id || index} 
                     className="sz-vibrant-row" 
-                    onClick={() => navigate(`/results/${interview._id}`)}
+                    onClick={() => navigate("/history")}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="sz-row-left">
@@ -268,6 +334,32 @@ function Dashboard() {
                 </div>
               )}
             </div>
+
+            {/* Quick Tips for Mock Interviews */}
+            <div className="sz-dashboard-tips-section">
+              <h4 className="sz-tips-title">
+                <span></span>Interview Coaching Tips
+              </h4>
+              <div className="sz-tips-grid">
+                <div className="sz-tip-item blue">
+                  <strong>Camera Position</strong>
+                  Look directly at the camera, keep your head centered in the viewport, and maintain stable posture.
+                </div>
+                <div className="sz-tip-item emerald">
+                  <strong>Answer Delivery</strong>
+                  Use the STAR method (Situation, Task, Action, Result) to give structured and detail-rich answers.
+                </div>
+                <div className="sz-tip-item amber">
+                  <strong>Speaking Pacing</strong>
+                  Speak slowly, enunciate clearly, and use natural pauses. Avoid hesitation fillers like "uh" or "um".
+                </div>
+                <div className="sz-tip-item purple">
+                  <strong>Preparation</strong>
+                  Prepare a short story list for your group projects, GitHub commits, and major technical challenges.
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* SIDE DATA VISUALIZATIONS */}
@@ -275,7 +367,9 @@ function Dashboard() {
             <h3 className="sz-panel-title">Confidence Distribution</h3>
             <p className="sz-panel-subtitle">Breakdown of confidence levels across all interviews.</p>
             
-            {Object.entries(stats.confidenceLevels).map(([level, count]) => (
+            {Object.entries(stats.confidenceLevels)
+              .filter(([level]) => level.toLowerCase() !== "unknown")
+              .map(([level, count]) => (
               <div key={level} className="sz-progress-group">
                 <div className="sz-progress-info">
                   <span className="sz-progress-label">
@@ -306,7 +400,7 @@ function Dashboard() {
 
             {/* INTEGRATED ALERTS */}
             <div className="sz-vibrant-alert">
-              <div className="sz-alert-icon">✨</div>
+              <div className="sz-alert-icon"></div>
               <div className="sz-alert-body">
                 <h4>AI Engine Status: {stats.totalInterviews > 0 ? 'Active' : 'Ready'}</h4>
                 <p>

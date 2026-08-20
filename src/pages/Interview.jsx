@@ -338,9 +338,6 @@ function Interview() {
     recommendations: []
   });
 
-  // ============================================================
-  // NAVIGATION BETWEEN QUESTIONS
-  // ============================================================
   const goToNext = (index) => {
     const next = index + 1;
 
@@ -351,10 +348,8 @@ function Interview() {
       return;
     }
 
-    // Finished all warm-ups. Are the AI questions ready?
     const ai = aiQuestionsRef.current;
     if (!ai) {
-      // Not yet — park on the "preparing" screen; an effect resumes us.
       setPhase("waiting-ai");
       return;
     }
@@ -369,13 +364,9 @@ function Interview() {
   };
 
   const skipQuestion = () => {
-    // Skipping simply advances; no analysis is recorded for this question.
     goToNext(questionIndex);
   };
 
-  // ============================================================
-  // FINISH: collect all background results, then summarize
-  // ============================================================
   const finishInterview = async () => {
     if (finishedRef.current) return;
     finishedRef.current = true;
@@ -383,10 +374,9 @@ function Interview() {
     setPhase("summarizing");
     setError(null);
 
-    // Wait for every background analysis to settle.
+
     await Promise.allSettled(pendingRef.current.map((p) => p.promise));
 
-    // Assemble the answers in question order from the in-memory store.
     const orderedAnswers = pendingRef.current
       .slice()
       .sort((a, b) => a.index - b.index)
@@ -411,10 +401,6 @@ function Interview() {
       }));
 
       const jdText = String(jobDescription || "dummy_jd");
-
-      // Resolve the candidate name from the stored user (supports both
-      // { name } and nested { user: { name } } shapes). Position and company
-      // are left to the backend to infer from the job description.
       let candidateName = "";
       try {
         const parsed = JSON.parse(localStorage.getItem("user") || "{}");
@@ -473,11 +459,6 @@ function Interview() {
     }
   };
 
-  // ============================================================
-  // RENDER
-  // ============================================================
-
-  // Final summary is generating — dedicated loading screen.
   if (phase === "summarizing") {
     return (
       <div className="platform-page">
@@ -508,7 +489,6 @@ function Interview() {
     );
   }
 
-  // Warm-ups done but tailored questions aren't ready yet.
   if (phase === "waiting-ai") {
     return (
       <div className="platform-page">

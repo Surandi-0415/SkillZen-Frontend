@@ -6,6 +6,7 @@
   color: #0f172a;
   display: flex;
   flex-direction: column;
+  text-align: left;
 }
 
 .pre-interview-container {

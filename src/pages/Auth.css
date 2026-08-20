@@ -21,6 +21,7 @@
 .auth-container {
   width: 100%;
   max-width: 400px;
+  text-align: left;
 }
 
 .brand-logo-container {
@@ -63,7 +64,10 @@
 }
 
 /* Inputs & Actions */
-.input-group { margin-bottom: 24px; }
+.input-group {
+  margin-bottom: 24px;
+  text-align: left;
+}
 
 .input-group label {
   display: block;

@@ -75,7 +75,7 @@ function Header() {
           <div className="user-profile-card" onClick={() => navigate("/profile")}>
             <div className="user-info-text">
               <span className="user-display-name">{userData.name}</span>
-              <span className="user-membership-tag">Pro Candidate</span>
+              <span className="user-membership-tag">Candidate</span>
             </div>
             <div className="user-avatar-circle">
               <img 

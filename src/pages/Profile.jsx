@@ -10,6 +10,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 import { getProfile, updateProfile } from "../api/authApi";
+import { getInterviewHistory } from "../api/interviewApi";
 
 import "./Profile.css";
 
@@ -24,11 +25,22 @@ function Profile() {
   const [saveStatus, setSaveStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const fileInputRef = useRef(null);
 
-  // LOAD USER DATA FROM API
+  // Tab State: 'profile' | 'security' | 'insights'
+  const [activeTab, setActiveTab] = useState("profile");
+
+  // Dynamic stats calculated from user history
+  const [stats, setStats] = useState({
+    totalInterviews: 0,
+    averageScore: 0,
+    facialConfidence: 0,
+    speechConfidence: 0
+  });
+
+  // LOAD USER DATA & STATS
   useEffect(() => {
     fetchUserProfile();
+    fetchStats();
   }, []);
 
   const fetchUserProfile = async () => {
@@ -44,7 +56,6 @@ function Profile() {
       });
     } catch (error) {
       console.error("Failed to fetch profile:", error);
-      // Fallback to localStorage if API fails
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         try {
@@ -63,6 +74,64 @@ function Profile() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await getInterviewHistory(1, 100); // fetch up to 100 entries for aggregate stats
+      let data = [];
+      if (response.data && response.data.data) {
+        data = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        data = response.data;
+      }
+
+      const completed = data.filter(s => s.status === "completed");
+      if (completed.length === 0) return;
+
+      // Calculate Average Content Score (as percentage)
+      const totalContent = completed.reduce((sum, s) => sum + (s.overallScore || 0), 0);
+      const avgScore = (totalContent / completed.length) * 10;
+
+      // Calculate Facial Confidence Score
+      const facialScores = completed.map(s => {
+        const answers = s.answers || [];
+        const answersWithFacial = answers.filter(a => 
+          a.facial_analysis && 
+          (typeof a.facial_analysis.confidence === 'number' || typeof a.facial_analysis.confidence_score === 'number') &&
+          a.facial_analysis.frames_analyzed > 0
+        );
+        if (answersWithFacial.length === 0) return null;
+        return answersWithFacial.reduce((sum, a) => {
+          const conf = (a.facial_analysis.confidence !== undefined && a.facial_analysis.confidence > 0) ? a.facial_analysis.confidence : (a.facial_analysis.confidence_score || 0);
+          return sum + conf;
+        }, 0) / answersWithFacial.length;
+      }).filter(s => s !== null);
+      const avgFacial = facialScores.length > 0 ? (facialScores.reduce((sum, s) => sum + s, 0) / facialScores.length) * 100 : 0;
+
+      // Calculate Speech Confidence Score
+      const speechScores = completed.map(s => {
+        const answers = s.answers || [];
+        const answersWithSpeech = answers.filter(a => 
+          a.speech_analysis && 
+          typeof a.speech_analysis.confidence_score === 'number' &&
+          a.speech_analysis.predicted_emotion !== 'unknown' &&
+          a.speech_analysis.confidence_score > 0
+        );
+        if (answersWithSpeech.length === 0) return null;
+        return answersWithSpeech.reduce((sum, a) => sum + a.speech_analysis.confidence_score, 0) / answersWithSpeech.length;
+      }).filter(s => s !== null);
+      const avgSpeech = speechScores.length > 0 ? (speechScores.reduce((sum, s) => sum + s, 0) / speechScores.length) * 100 : 0;
+
+      setStats({
+        totalInterviews: completed.length,
+        averageScore: Math.round(avgScore),
+        facialConfidence: Math.round(avgFacial),
+        speechConfidence: Math.round(avgSpeech)
+      });
+    } catch (err) {
+      console.warn("Failed to fetch aggregate profile stats:", err);
+    }
+  };
+
   // HANDLE INPUT CHANGE
   const handleInputChange = (e) => {
     setUserData({
@@ -78,7 +147,6 @@ function Profile() {
     setSaveStatus("");
 
     try {
-      // Prepare update data
       const updateData = {
         name: userData.name,
         email: userData.email,
@@ -87,7 +155,6 @@ function Profile() {
         }
       };
 
-      // If password is provided, include it
       if (password) {
         updateData.password = password;
       }
@@ -107,8 +174,12 @@ function Profile() {
       setSaveStatus("✅ Profile updated successfully!");
       setPassword("");
 
-      // Refresh profile data
+      // Dispatch user status change event to update Header layout immediately
+      window.dispatchEvent(new Event("userLoginStatusChanged"));
+      
+      // Refresh profile details and stats
       await fetchUserProfile();
+      await fetchStats();
 
       setTimeout(() => {
         setSaveStatus("");
@@ -122,18 +193,12 @@ function Profile() {
     }
   };
 
-  // TRIGGER FILE INPUT
-  const triggerFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  // HANDLE FILE UPLOAD
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // TODO: Implement avatar upload
-    alert("Avatar upload coming soon!");
+  // PASSWORD STRENGTH METER
+  const getPasswordStrength = () => {
+    if (!password) return "";
+    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return "strong";
+    if (password.length >= 6) return "medium";
+    return "weak";
   };
 
   if (loadingProfile) {
@@ -143,7 +208,7 @@ function Profile() {
         <main className="profile-container">
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Loading profile...</p>
+            <p>Loading profile details...</p>
           </div>
         </main>
         <Footer />
@@ -156,210 +221,218 @@ function Profile() {
       <Header />
 
       <main className="profile-container">
-        {/* PAGE HEADER */}
         <header className="profile-header">
-          <div>
-            <h1 className="page-title">User Profile</h1>
-            <p className="page-subtitle">
-              Manage your personal information and preferences.
-            </p>
-          </div>
+          <h1 className="page-title">Candidate Profile</h1>
+          <p className="page-subtitle">Configure your mock profile, view performance stats, and manage account security.</p>
         </header>
 
         <div className="profile-content-grid">
-          {/* PROFILE CARD */}
-          <section className="profile-main-card">
-            {/* AVATAR */}
-            <div className="avatar-section">
-              <div className="avatar-display">
-                {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
-              </div>
-
-              <h3 className="avatar-name">{userData.name || "User"}</h3>
-              <p className="avatar-role">{userData.role || "Candidate"}</p>
-
-              {/* HIDDEN FILE INPUT */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept="image/*"
-                onChange={handleFileUpload}
-              />
-
-              <button
-                className="btn-secondary btn-upload"
-                onClick={triggerFileUpload}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-                Upload Photo
-              </button>
+          
+          {/* LEFT SIDEBAR PANEL */}
+          <aside className="profile-sidebar-card">
+            <div className="avatar-display">
+              {userData.name ? userData.name.charAt(0).toUpperCase() : "C"}
             </div>
+            <h3 className="avatar-name">{userData.name || "Candidate"}</h3>
+            <p className="avatar-role">{userData.role || "Target Role"}</p>
 
-            {/* FORM */}
-            <form className="profile-form" onSubmit={handleSave}>
-              <h3 className="section-title">Basic Details</h3>
+            <nav className="profile-nav-tabs">
+              <button 
+                className={`profile-tab-btn ${activeTab === "profile" ? "active" : ""}`}
+                onClick={() => setActiveTab("profile")}
+              >
+                <span className="profile-tab-icon">👤</span> Basic Details
+              </button>
+              <button 
+                className={`profile-tab-btn ${activeTab === "security" ? "active" : ""}`}
+                onClick={() => setActiveTab("security")}
+              >
+                <span className="profile-tab-icon">🔒</span> Account Security
+              </button>
+              <button 
+                className={`profile-tab-btn ${activeTab === "insights" ? "active" : ""}`}
+                onClick={() => setActiveTab("insights")}
+              >
+                <span className="profile-tab-icon">📈</span> AI Insights
+              </button>
+            </nav>
+          </aside>
 
-              {saveStatus && (
-                <div className={`alert-${saveStatus.includes("✅") ? "success" : "error"}`}>
-                  {saveStatus}
-                </div>
-              )}
+          {/* MAIN FORMS PANEL */}
+          <section className="profile-main-panel">
+            
+            {saveStatus && (
+              <div className={`alert-chip ${saveStatus.includes("✅") ? "success" : "error"}`}>
+                {saveStatus}
+              </div>
+            )}
 
-              <div className="form-grid">
-                {/* NAME */}
-                <div className="input-group">
-                  <label htmlFor="name">Full Name</label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={userData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                {/* EMAIL */}
-                <div className="input-group">
-                  <label htmlFor="email">Email Address</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                {/* ROLE */}
-                <div className="input-group">
-                  <label htmlFor="role">Current Role</label>
-                  <input
-                    id="role"
-                    name="role"
-                    type="text"
-                    value={userData.role}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Senior Software Engineer"
-                  />
+            {/* TAB 1: BASIC PROFILE */}
+            {activeTab === "profile" && (
+              <form className="profile-form" onSubmit={handleSave}>
+                <div className="panel-header">
+                  <h2>Basic Profile Details</h2>
+                  <p>Edit your primary contact info and desired corporate target role.</p>
                 </div>
 
-                {/* PASSWORD */}
-                <div className="input-group">
-                  <label htmlFor="password">Update Password</label>
+                <div className="form-grid">
+                  <div className="input-group">
+                    <label htmlFor="name">Full Name</label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={userData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="email">Email Address</label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={userData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="role">Desired Target Role</label>
+                    <input
+                      id="role"
+                      name="role"
+                      type="text"
+                      value={userData.role}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Software Engineer"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="submit" className="btn-primary" disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 2: ACCOUNT SECURITY */}
+            {activeTab === "security" && (
+              <form className="profile-form" onSubmit={handleSave}>
+                <div className="panel-header">
+                  <h2>Account Security</h2>
+                  <p>Update your credential settings to maintain secure platform access.</p>
+                </div>
+
+                <div className="input-group" style={{ maxWidth: '400px' }}>
+                  <label htmlFor="password">Change Account Password</label>
                   <input
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="Leave blank to keep current"
+                    placeholder="Enter new password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  {password && (
+                    <>
+                      <div className="password-strength-bar">
+                        <div className={`password-strength-fill ${getPasswordStrength()}`} />
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'capitalize', color: getPasswordStrength() === 'strong' ? '#16a34a' : getPasswordStrength() === 'medium' ? '#f59e0b' : '#ef4444' }}>
+                        Password Strength: {getPasswordStrength()}
+                      </span>
+                    </>
+                  )}
                 </div>
-              </div>
 
-              {/* ACTIONS */}
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Save Changes"}
-                </button>
+                <div className="form-actions">
+                  <button type="submit" className="btn-primary" disabled={loading || (password && password.length < 6)}>
+                    {loading ? "Saving..." : "Update Security"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: PERFORMANCE INSIGHTS */}
+            {activeTab === "insights" && (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div className="panel-header">
+                  <h2>AI Analytics Dashboard</h2>
+                  <p>Aggregated metrics calculated across your mock practice sessions.</p>
+                </div>
+
+                {stats.totalInterviews === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+                    <p>No completed interviews found. Stats will populate here once you complete a practice run.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="insights-grid">
+                      {/* Overall Content score */}
+                      <div className="insight-metric-card">
+                        <h4>Average Evaluation</h4>
+                        <div className="insight-value-block">
+                          <h2>{stats.averageScore}</h2>
+                          <span>%</span>
+                        </div>
+                        <div className="insight-progress-track">
+                          <div className="insight-progress-fill purple" style={{ width: `${stats.averageScore}%` }} />
+                        </div>
+                      </div>
+
+                      {/* Overall Facial score */}
+                      <div className="insight-metric-card">
+                        <h4>Facial Confidence</h4>
+                        <div className="insight-value-block">
+                          <h2>{stats.facialConfidence}</h2>
+                          <span>%</span>
+                        </div>
+                        <div className="insight-progress-track">
+                          <div className="insight-progress-fill green" style={{ width: `${stats.facialConfidence}%` }} />
+                        </div>
+                      </div>
+
+                      {/* Overall Speech score */}
+                      <div className="insight-metric-card">
+                        <h4>Vocal Confidence</h4>
+                        <div className="insight-value-block">
+                          <h2>{stats.speechConfidence}</h2>
+                          <span>%</span>
+                        </div>
+                        <div className="insight-progress-track">
+                          <div className="insight-progress-fill blue" style={{ width: `${stats.speechConfidence}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="insights-tips-box">
+                      <h4>💡 Coaching Insights & Recommendations</h4>
+                      <ul>
+                        <li>Your average evaluation score is <strong>{stats.averageScore}%</strong>. Focus on standard answer structures to improve formatting.</li>
+                        {stats.facialConfidence < 70 && (
+                          <li>Your facial confidence score is on the lower side (<strong>{stats.facialConfidence}%</strong>). Try maintaining steady eye contact with the camera and keeping a neutral, friendly posture.</li>
+                        )}
+                        {stats.speechConfidence < 70 && (
+                          <li>Your voice confidence score is at <strong>{stats.speechConfidence}%</strong>. Rehearse speaking at a steady pace and reduce filler words like "um" or "like".</li>
+                        )}
+                        {stats.facialConfidence >= 70 && stats.speechConfidence >= 70 && (
+                          <li>Great job! Both your visual and vocal confidence are above the 70% benchmark. Maintain this poise during live calls!</li>
+                        )}
+                      </ul>
+                    </div>
+                  </>
+                )}
               </div>
-            </form>
+            )}
+
           </section>
 
-          {/* STATS */}
-          <section className="profile-stats-grid">
-            {/* INTERVIEWS */}
-            <div className="stat-card">
-              <div className="stat-icon blue-bg">
-                <svg
-                  width="24"
-                  height="24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div className="stat-data">
-                <h4>Total Interviews</h4>
-                <h2>12</h2>
-              </div>
-            </div>
-
-            {/* SCORE */}
-            <div className="stat-card">
-              <div className="stat-icon green-bg">
-                <svg
-                  width="24"
-                  height="24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <div className="stat-data">
-                <h4>Average Score</h4>
-                <h2>78<span className="unit">%</span></h2>
-              </div>
-            </div>
-
-            {/* HOURS */}
-            <div className="stat-card">
-              <div className="stat-icon purple-bg">
-                <svg
-                  width="24"
-                  height="24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="stat-data">
-                <h4>Hours Practiced</h4>
-                <h2>4.5<span className="unit">h</span></h2>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
 

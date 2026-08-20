@@ -17,6 +17,9 @@ function Results() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 'report' | 'qa'
+  const [activeTab, setActiveTab] = useState("report");
+
   // Get data from location state
   const locationAnswers = location.state?.answers || [];
   const locationReport = location.state?.report || "";
@@ -72,24 +75,61 @@ function Results() {
     return <span className="badge badge-danger">Needs Work ({score}/10)</span>;
   };
 
-  // ✅ NEW: Get confidence level color
   const getConfidenceColor = (level) => {
     const colors = {
       'Excellent': '#10b981',
       'High': '#22c55e',
       'Moderate': '#f59e0b',
-      'Fair': '#f97316',
+      'Fair': '#ea580c',
       'Low': '#ef4444',
-      'unknown': '#94a3b8'
+      'Unknown': '#64748b'
     };
-    return colors[level] || '#94a3b8';
+    return colors[level] || '#64748b';
   };
 
-  // ✅ NEW: Render facial analysis
-  const renderFacialAnalysis = (ans) => {
-    if (!ans.facial_analysis || !ans.facial_analysis.confidence) return null;
+  const getFormattedPercent = (val) => {
+    if (val === undefined || val === null) return 0;
+    const num = Number(val);
+    const pct = num > 1 ? num : num * 100;
+    return pct;
+  };
 
+  const answers = interviewData?.answers || locationAnswers || [];
+  const report = interviewData?.report || locationReport || "";
+  const totalQuestions = answers.length;
+  const avgScore = totalQuestions > 0
+    ? answers.reduce((acc, curr) => acc + Number(curr.content_score || 0), 0) / totalQuestions
+    : 0;
+
+  // Calculate Overall Facial Confidence Percentage (filter out failed/skipped analysis where frames_analyzed is 0 or undefined)
+  const answersWithFacial = answers.filter(a => 
+    a.facial_analysis && 
+    (typeof a.facial_analysis.confidence === 'number' || typeof a.facial_analysis.confidence_score === 'number') &&
+    a.facial_analysis.frames_analyzed > 0
+  );
+  const avgFacialConfidence = answersWithFacial.length > 0
+    ? (answersWithFacial.reduce((sum, a) => {
+        const conf = (a.facial_analysis.confidence !== undefined && a.facial_analysis.confidence > 0) ? a.facial_analysis.confidence : (a.facial_analysis.confidence_score || 0);
+        return sum + conf;
+      }, 0) / answersWithFacial.length) * 100
+    : null;
+
+  
+  const answersWithSpeech = answers.filter(a => 
+    a.speech_analysis && 
+    typeof a.speech_analysis.confidence_score === 'number' &&
+    a.speech_analysis.predicted_emotion !== 'unknown' &&
+    a.speech_analysis.confidence_score > 0
+  );
+  const avgSpeechConfidence = answersWithSpeech.length > 0
+    ? (answersWithSpeech.reduce((sum, a) => sum + a.speech_analysis.confidence_score, 0) / answersWithSpeech.length) * 100
+    : null;
+  const renderFacialAnalysis = (ans) => {
+    if (!ans.facial_analysis) return null;
     const fa = ans.facial_analysis;
+    const confidenceVal = (fa.confidence !== undefined && fa.confidence > 0) ? fa.confidence : (fa.confidence_score || 0);
+    if (confidenceVal === undefined || confidenceVal === null) return null;
+
     const emotions = fa.emotional_states || {};
 
     return (
@@ -98,7 +138,7 @@ function Results() {
         <div className="analysis-grid">
           <div className="analysis-item">
             <span className="label">Confidence Score</span>
-            <span className="value">{(fa.confidence * 100).toFixed(1)}%</span>
+            <span className="value">{(confidenceVal * 100).toFixed(1)}%</span>
           </div>
           <div className="analysis-item">
             <span className="label">Level</span>
@@ -106,56 +146,41 @@ function Results() {
               {fa.confidence_level || 'Unknown'}
             </span>
           </div>
-          <div className="analysis-item">
-            <span className="label">Trend</span>
-            <span className="value">{fa.trend || 'stable'}</span>
-          </div>
-          <div className="analysis-item">
-            <span className="label">Frames Analyzed</span>
-            <span className="value">{fa.frames_analyzed || 0}</span>
-          </div>
         </div>
 
-        {/* Emotional States Bars */}
-        <div className="emotion-bars">
-          <div className="emotion-bar">
-            <span className="emotion-label">😊 Confident</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(emotions.confident || 0)}%`,
-                backgroundColor: '#10b981'
-              }} />
+        {/* Emotion Distribution */}
+        {Object.keys(emotions).length > 0 && (
+          <div className="emotion-bars">
+            <span className="box-label">Detected Emotions</span>
+            <div className="emotion-bar">
+              <span className="emotion-label">Confident</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(emotions.confident)}%`, backgroundColor: '#10b981' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(emotions.confident).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{(emotions.confident || 0).toFixed(1)}%</span>
-          </div>
-          <div className="emotion-bar">
-            <span className="emotion-label">😐 Neutral</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(emotions.neutral || 0)}%`,
-                backgroundColor: '#f59e0b'
-              }} />
+            <div className="emotion-bar">
+              <span className="emotion-label">Neutral</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(emotions.neutral)}%`, backgroundColor: '#64748b' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(emotions.neutral).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{(emotions.neutral || 0).toFixed(1)}%</span>
-          </div>
-          <div className="emotion-bar">
-            <span className="emotion-label">😰 Nervous</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(emotions.nervous || 0)}%`,
-                backgroundColor: '#ef4444'
-              }} />
+            <div className="emotion-bar">
+              <span className="emotion-label">Nervous</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(emotions.nervous)}%`, backgroundColor: '#ef4444' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(emotions.nervous).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{(emotions.nervous || 0).toFixed(1)}%</span>
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
-  // ✅ NEW: Render speech analysis
   const renderSpeechAnalysis = (ans) => {
-    if (!ans.speech_analysis || !ans.speech_analysis.predicted_emotion) return null;
+    if (!ans.speech_analysis || !ans.speech_analysis.confidence_score) return null;
 
     const sa = ans.speech_analysis;
     const scores = sa.emotion_scores || {};
@@ -165,78 +190,49 @@ function Results() {
         <h4>🎤 Speech Analysis</h4>
         <div className="analysis-grid">
           <div className="analysis-item">
-            <span className="label">Predicted Emotion</span>
-            <span className={`value emotion-${sa.predicted_emotion}`}>
-              {sa.predicted_emotion}
-            </span>
-          </div>
-          <div className="analysis-item">
             <span className="label">Confidence</span>
             <span className="value">{(sa.confidence_score * 100).toFixed(1)}%</span>
           </div>
           <div className="analysis-item">
-            <span className="label">Mode</span>
-            <span className="value">{sa.is_fallback ? 'Fallback' : 'AI Model'}</span>
+            <span className="label">Vocal Emotion</span>
+            <span className={`value emotion-${sa.predicted_emotion?.toLowerCase() || 'unknown'}`}>
+              {sa.predicted_emotion || 'Unknown'}
+            </span>
           </div>
         </div>
 
-        {/* Emotion Scores */}
-        <div className="emotion-bars">
-          <div className="emotion-bar">
-            <span className="emotion-label">😊 Confident</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(scores.confident || 0) * 100}%`,
-                backgroundColor: '#10b981'
-              }} />
+        {Object.keys(scores).length > 0 && (
+          <div className="emotion-bars">
+            <span className="box-label">Vocal Tone Mix</span>
+            <div className="emotion-bar">
+              <span className="emotion-label">Confident</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(scores.confident)}%`, backgroundColor: '#10b981' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(scores.confident).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{((scores.confident || 0) * 100).toFixed(1)}%</span>
-          </div>
-          <div className="emotion-bar">
-            <span className="emotion-label">🗣️ Clear</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(scores.clear || 0) * 100}%`,
-                backgroundColor: '#3b82f6'
-              }} />
+            <div className="emotion-bar">
+              <span className="emotion-label">Clear</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(scores.clear)}%`, backgroundColor: '#3b82f6' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(scores.clear).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{((scores.clear || 0) * 100).toFixed(1)}%</span>
-          </div>
-          <div className="emotion-bar">
-            <span className="emotion-label">😰 Nervous</span>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ 
-                width: `${(scores.nervous || 0) * 100}%`,
-                backgroundColor: '#ef4444'
-              }} />
+            <div className="emotion-bar">
+              <span className="emotion-label">Nervous</span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${getFormattedPercent(scores.nervous)}%`, backgroundColor: '#ef4444' }} />
+              </div>
+              <span className="emotion-value">{getFormattedPercent(scores.nervous).toFixed(1)}%</span>
             </div>
-            <span className="emotion-value">{((scores.nervous || 0) * 100).toFixed(1)}%</span>
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
-  // ✅ NEW: Render combined analysis summary
-  const renderCombinedAnalysis = (ans) => {
-    if (!ans.combined_confidence) return null;
-
-    return (
-      <div className="analysis-section combined-analysis">
-        <h4>📊 Combined Facial and Speech Analysis
-</h4>
-        <div className="combined-metrics">
-          <div className="combined-metric">
-            <span className="label">Combined Confidence</span>
-            <span className="value">{(ans.combined_confidence * 100).toFixed(1)}%</span>
-          </div>
-          <div className="combined-metric">
-            <span className="label">Overall Emotion</span>
-            <span className="value">{ans.overall_emotion || 'Unknown'}</span>
-          </div>
-        </div>
-      </div>
-    );
+  const handlePrint = () => {
+    window.print();
   };
 
   if (loading) {
@@ -244,76 +240,47 @@ function Results() {
       <div className="platform-results-page">
         <Header />
         <main className="platform-container">
-          <div className="loading-box">
+          <div className="loading-state-box">
             <div className="spinner"></div>
-            <p>Loading results...</p>
+            <p>Analyzing responses and building your feedback report...</p>
           </div>
         </main>
         <Footer />
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="platform-results-page">
-        <Header />
-        <main className="platform-container">
-          <div className="error-box">
-            <h2>Error</h2>
-            <p>{error}</p>
-            <button className="btn-primary" onClick={() => navigate("/dashboard")}>
-              Go to Dashboard
-            </button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  const answers = interviewData?.answers || locationAnswers || [];
-  const report = interviewData?.report || locationReport || "";
-  const totalQuestions = answers.length;
-  const avgScore = totalQuestions > 0
-    ? answers.reduce((acc, curr) => acc + Number(curr.content_score || 0), 0) / totalQuestions
-    : 0;
 
   return (
     <div className="platform-results-page">
       <Header />
 
       <main className="platform-container">
-        {/* HEADER */}
-        <header className="report-header">
+        {/* HEADER SECTION */}
+        <section className="report-header">
           <div>
-            <h1 className="report-title">
-              {interviewData?.jobTitle || "Interview Performance Report"}
-            </h1>
+            <h1 className="report-title">{interviewData?.jobTitle || "Interview Practice"} Report</h1>
             <p className="report-subtitle">
-              {totalQuestions} questions answered 
-              {interviewData?.createdAt && ` • ${new Date(interviewData.createdAt).toLocaleDateString()}`}
+              Generated on {interviewData?.createdAt ? new Date(interviewData.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
             </p>
           </div>
-
           <div className="header-actions">
-            <button className="btn-secondary" onClick={() => window.print()}>
-              Export PDF
+            <button className="btn-secondary" onClick={handlePrint}>
+              <span>🖨️</span> Save as PDF / Print
             </button>
             <button className="btn-primary" onClick={() => navigate("/dashboard")}>
-              Dashboard
-            </button>
-            <button className="btn-primary" onClick={() => navigate("/practice")}>
-              New Session
+              Return to Dashboard
             </button>
           </div>
-        </header>
+        </section>
 
-        {/* METRICS */}
+        {/* METRICS HEADER DASHBOARD */}
         <section className="metrics-grid">
           <div className="metric-card">
+            <div className="metric-icon blue-bg">
+              <img src="https://img.icons8.com/fluency/96/trophy.png" alt="Overall Score" />
+            </div>
             <div className="metric-data">
-              <h3>Overall Score</h3>
+              <h3>Evaluation Score</h3>
               <div className="metric-value">
                 {avgScore.toFixed(1)}
                 <span>/10</span>
@@ -322,106 +289,129 @@ function Results() {
           </div>
 
           <div className="metric-card">
+            <div className="metric-icon purple-bg">
+              <img src="https://img.icons8.com/fluency/96/help.png" alt="Questions" />
+            </div>
             <div className="metric-data">
               <h3>Questions Answered</h3>
-              <div className="metric-value">
-                {totalQuestions}
-              </div>
+              <div className="metric-value">{totalQuestions}</div>
             </div>
           </div>
 
-          {interviewData?.overallAnalysis?.overall_confidence_level && (
+          {avgFacialConfidence !== null && (
             <div className="metric-card">
+              <div className="metric-icon green-bg">
+                <img src="https://img.icons8.com/fluency/96/happy.png" alt="Facial Confidence" />
+              </div>
               <div className="metric-data">
-                <h3>Confidence Level</h3>
-                <div className="metric-value" style={{ fontSize: '24px' }}>
-                  {interviewData.overallAnalysis.overall_confidence_level}
+                <h3>Facial Confidence</h3>
+                <div className="metric-value">
+                  {avgFacialConfidence.toFixed(1)}
+                  <span>%</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {avgSpeechConfidence !== null && (
+            <div className="metric-card">
+              <div className="metric-icon orange-bg">
+                <img src="https://img.icons8.com/fluency/96/microphone.png" alt="Speech Confidence" />
+              </div>
+              <div className="metric-data">
+                <h3>Speech Confidence</h3>
+                <div className="metric-value">
+                  {avgSpeechConfidence.toFixed(1)}
+                  <span>%</span>
                 </div>
               </div>
             </div>
           )}
         </section>
 
-        {/* AI REPORT */}
-        <section className="summary-section">
-          <h2 className="section-title">Interview Performance Summary</h2>
-          <div className="summary-box">
+        {/* TABS NAVIGATION */}
+        <div className="results-tab-bar">
+          <button 
+            className={`tab-link ${activeTab === "report" ? "active" : ""}`}
+            onClick={() => setActiveTab("report")}
+          >
+          Feedback Report
+          </button>
+          <button 
+            className={`tab-link ${activeTab === "qa" ? "active" : ""}`}
+            onClick={() => setActiveTab("qa")}
+          >
+          Detailed Response Review
+          </button>
+        </div>
+
+        {/* TAB CONTENT 1: AI REPORT */}
+        {activeTab === "report" && (
+          <div className="tab-pane active fade-in">
             {report ? (
-              <div className="markdown-report">
-                <ReactMarkdown>{report}</ReactMarkdown>
+              <div className="summary-box">
+                <div className="markdown-report">
+                  <ReactMarkdown>{report}</ReactMarkdown>
+                </div>
               </div>
             ) : (
-              <p className="empty-state">No summary generated.</p>
+              <div className="empty-state-box">
+                <p>No feedback report was generated for this session.</p>
+              </div>
             )}
           </div>
-        </section>
+        )}
 
-        {/* ANSWERS with Analysis */}
-        <section className="detailed-review">
-          <h2 className="section-title">Detailed Response Review</h2>
-          <div className="qa-list">
-            {answers.map((ans, idx) => (
-              <article key={idx} className="qa-card">
-                <div className="qa-header">
-                  <span className="qa-number">Q{idx + 1}</span>
-                  <h3 className="qa-question">{ans.question}</h3>
-                  <div className="qa-badges">
-                    {getScoreBadge(ans.content_score)}
-                    {ans.confidence && (
-                      <span className={`badge badge-${ans.confidence.toLowerCase()}`}>
-                        {ans.confidence}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="qa-body">
-                  {/* Transcript */}
-                  <div className="transcript-box">
-                    <span className="box-label">Candidate Transcript</span>
-                    <p className="transcript-text">"{ans.answer || ans.transcript || "No answer provided"}"</p>
-                  </div>
-
-                  {/* Content Feedback */}
-                  {ans.explanation && (
-                    <div className="feedback-box">
-                      <span className="box-label">
-                        AI Assessment
-                        {ans.confidence && ` (${ans.confidence})`}
-                      </span>
-                      <p className="feedback-text">{ans.explanation}</p>
+        {/* TAB CONTENT 2: DETAILED Q&A REVIEW */}
+        {activeTab === "qa" && (
+          <div className="tab-pane active fade-in">
+            <div className="qa-list">
+              {answers.length > 0 ? (
+                answers.map((ans, idx) => (
+                  <div key={idx} className="qa-card">
+                    <div className="qa-header">
+                      <span className="qa-number">Q{idx + 1}</span>
+                      <h3 className="qa-question">{ans.question}</h3>
+                      <div className="qa-score-badge">
+                        {getScoreBadge(ans.content_score)}
+                      </div>
                     </div>
-                  )}
 
-                  {/* ✅ NEW: Combined Analysis */}
-                  {renderCombinedAnalysis(ans)}
+                    <div className="qa-body">
+                      {/* Answer Transcript */}
+                      <div className="feedback-box">
+                        <span className="box-label">Your Transcript</span>
+                        <div className="transcript-box">
+                          <p className="transcript-text">
+                            "{ans.answer || ans.transcript || "No transcript recorded for this response."}"
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* ✅ NEW: Facial Analysis */}
-                  {renderFacialAnalysis(ans)}
+                      {/* Content evaluation explanation */}
+                      {ans.explanation && (
+                        <div className="feedback-box">
+                          <span className="box-label">Evaluation Feedback</span>
+                          <p className="feedback-text">{ans.explanation}</p>
+                        </div>
+                      )}
 
-                  {/* ✅ NEW: Speech Analysis */}
-                  {renderSpeechAnalysis(ans)}
+                      {/* Facial Analysis */}
+                      {renderFacialAnalysis(ans)}
 
-                  {/* Recommendations */}
-                  {ans.recommendations && ans.recommendations.length > 0 && (
-                    <div className="recommendations-box">
-                      <span className="box-label">Recommendations</span>
-                      <ul>
-                        {ans.recommendations.map((rec, i) => (
-                          <li key={i}>{rec}</li>
-                        ))}
-                      </ul>
+                      {/* Speech Analysis */}
+                      {renderSpeechAnalysis(ans)}
                     </div>
-                  )}
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state-box">
+                  <p>No individual question records are available for this interview.</p>
                 </div>
-              </article>
-            ))}
-
-            {answers.length === 0 && (
-              <div className="empty-state-box">No interview data found.</div>
-            )}
+              )}
+            </div>
           </div>
-        </section>
+        )}
       </main>
 
       <Footer />

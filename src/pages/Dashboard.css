@@ -23,6 +23,7 @@
   min-height: 100vh;
   font-family: 'Inter', -apple-system, sans-serif;
   color: var(--sz-dark-slate);
+  text-align: left;
 }
 
 .sz-dashboard-container {
@@ -146,9 +147,28 @@
 /* Neon Gradient Analytical Framework Grid */
 .sz-vibrant-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
   margin-bottom: 40px;
+}
+
+@media (max-width: 1200px) {
+  .sz-vibrant-metrics {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 800px) {
+  .sz-vibrant-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .sz-vibrant-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sz-vibrant-card {
@@ -176,11 +196,13 @@
 .metric-emerald .sz-card-glow { background: var(--sz-emerald); }
 .metric-indigo .sz-card-glow { background: var(--sz-indigo); }
 .metric-purple .sz-card-glow { background: var(--sz-purple); }
+.metric-amber .sz-card-glow { background: var(--sz-amber); }
 
 .metric-blue { border-left: 4px solid var(--sz-electric-blue); }
 .metric-emerald { border-left: 4px solid var(--sz-emerald); }
 .metric-indigo { border-left: 4px solid var(--sz-indigo); }
 .metric-purple { border-left: 4px solid var(--sz-purple); }
+.metric-amber { border-left: 4px solid var(--sz-amber); }
 
 .sz-card-label {
   font-size: 11px;
@@ -198,9 +220,9 @@
 }
 
 .sz-card-value {
-  font-size: 38px;
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 
 .sz-card-value.accent-text {
@@ -217,10 +239,11 @@
 }
 
 .sz-card-badge {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .sz-card-badge.status-up { background: #e6fdf5; color: #047857; }
@@ -536,4 +559,56 @@
 .status-failed {
   background: #ef4444;
   color: white;
+}
+
+/* Dashboard Coaching Tips Box styling */
+.sz-dashboard-tips-section {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 24px;
+  padding-top: 24px;
+  text-align: left;
+}
+
+.sz-tips-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sz-tips-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sz-tip-item {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+  border-left: 3px solid #2563eb;
+}
+
+.sz-tip-item.blue { border-left-color: #2563eb; }
+.sz-tip-item.emerald { border-left-color: #10b981; }
+.sz-tip-item.amber { border-left-color: #f59e0b; }
+.sz-tip-item.purple { border-left-color: #8b5cf6; }
+
+.sz-tip-item strong {
+  color: #0f172a;
+  display: block;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 650px) {
+  .sz-tips-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
